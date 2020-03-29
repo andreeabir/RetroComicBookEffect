@@ -1,12 +1,14 @@
-from PIL import Image, ImageDraw, ImageStat
+import random
+
 import cv2
-from sklearn.cluster import MiniBatchKMeans
 import numpy as np
+from PIL import Image, ImageDraw, ImageStat, ImageFont
+from sklearn.cluster import MiniBatchKMeans
 
 
 class ComicBookEffect(object):
-    def __init__(self, sample=8, scale=1, percentage=50, angles=[0,15,30,45], contrast=False, quantization=True,
-                 grain=False, alpha_blending=0.4):
+    def __init__(self, sample=8, scale=1, percentage=50, angles=[0, 15, 30, 45], contrast=False, quantization=True,
+                 grain=False, alpha_blending=0.3, add_comic_text_on_image=True):
         self.sample = sample
         self.angles = angles
         self.scale = scale
@@ -15,8 +17,10 @@ class ComicBookEffect(object):
         self.contrast = contrast
         self.grain = grain
         self.alpha = alpha_blending
+        self.add_comic_text_on_image = add_comic_text_on_image
+        self.comic_texts = open('./comic_texts.txt').readline().split(';')
 
-    def process(self, input_path, out_path):
+    def process(self, input_path, out_path=None):
         img = Image.open(input_path)
         original = np.array(img).copy()
 
@@ -37,7 +41,13 @@ class ComicBookEffect(object):
         original = cv2.cvtColor(original, cv2.COLOR_RGB2BGR)
 
         out = img * self.alpha + (1 - self.alpha) * original
-        cv2.imwrite(out_path, out)
+
+        if self.add_comic_text_on_image is True:
+            out = self.add_comic_text(out)
+
+        if out_path is not None:
+            cv2.imwrite(out_path, out)
+        return out
 
     def halftone(self, img, cmyk):
         cmyk = cmyk.split()
@@ -83,6 +93,25 @@ class ComicBookEffect(object):
     def apply_grain(self, image):
         return image
 
+    def add_comic_text(self, image):
+        h, w, c = image.shape
+
+        margin_size = 3
+        h_size = min(int(h / 6), 100)
+        w_size = min(int(w / 3), 200)
+
+        image[0:h_size, 0:w_size, :] = 30
+        image[margin_size:h_size - margin_size, margin_size:w_size - margin_size, :] = 80
+        image = image.astype(np.uint8)
+
+        img = Image.fromarray(image)
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.truetype("./font/comicbook.ttf", 25)
+
+        comic_text = self.comic_texts[random.randint(0, len(self.comic_texts) - 1)]
+        draw.text((margin_size + 5, margin_size + 5), comic_text, (0, 0, 255), font=font)
+        return np.array(img)
+
     def quantization_image(self, image, num_clusters=10):
         image = np.array(image)
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -126,4 +155,4 @@ class ComicBookEffect(object):
 
 if __name__ == "__main__":
     effect = ComicBookEffect()
-    effect.process("examples/film-grain.jpg", "examples/comic_effect_film-grain.jpg")
+    effect.process("examples/img.jpg", "examples/comic_effect_film-grain2.jpg")
