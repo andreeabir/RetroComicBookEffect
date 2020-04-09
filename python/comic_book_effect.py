@@ -24,30 +24,35 @@ class ComicBookEffect(object):
         img = Image.open(input_path)
         original = np.array(img).copy()
 
+        step1_img = img.copy()
         if self.contrast:
-            img = self.apply_contrast(img)
+            step1_img = self.apply_contrast(img)
 
-        if self.grain:
-            img = self.apply_grain(img)
-
+        step2_img = step1_img.copy()
         if self.quantization:
-            img = self.quantization_image(img, num_clusters=10)
+            step2_img = self.quantization_image(step1_img, num_clusters=30)
 
-        cmyk = self.gcr(img)
-        dots = self.halftone(img, cmyk)
-        img = Image.merge('CMYK', dots)
-        img = img.convert('RGB')
-        img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-        original = cv2.cvtColor(original, cv2.COLOR_RGB2BGR)
+        step3_img = step2_img.copy()
+        if self.grain:
+            step3_img = self.apply_grain(step2_img)
 
-        out = img * self.alpha + (1 - self.alpha) * original
+        cmyk = self.gcr(step3_img)
+        dots = self.halftone(step3_img, cmyk)
+        step4_img = Image.merge('CMYK', dots)
+        step4_img = step4_img.convert('RGB')
+        step4_img = cv2.cvtColor(np.array(step4_img), cv2.COLOR_RGB2BGR)
+        original = cv2.cvtColor(np.array(step3_img), cv2.COLOR_RGB2BGR)
+
+        out = step4_img * self.alpha + (1 - self.alpha) * original
+        out = cv2.cvtColor(out.astype('float32'), cv2.COLOR_BGR2RGB)
+
+        if out_path is not None:
+            cv2.imwrite(out_path, out)
 
         if self.add_comic_text_on_image is True:
             out = self.add_comic_text(out)
 
-        if out_path is not None:
-            cv2.imwrite(out_path, out)
-        return out
+        return step1_img, step2_img, step3_img, out
 
     def halftone(self, img, cmyk):
         cmyk = cmyk.split()
@@ -63,7 +68,7 @@ class ComicBookEffect(object):
                 for y in range(0, channel.size[1], self.sample):
                     box = channel.crop((x, y, x + self.sample, y + self.sample))
                     mean = ImageStat.Stat(box).mean[0]
-                    diameter = (mean / 255) ** 0.5
+                    diameter = (mean / 255) ** 0.5 * 0.7
                     box_size = self.sample * self.scale
                     draw_diameter = diameter * box_size
                     box_x, box_y = (x * self.scale), (y * self.scale)
@@ -110,7 +115,7 @@ class ComicBookEffect(object):
 
         comic_text = self.comic_texts[random.randint(0, len(self.comic_texts) - 1)]
         draw.text((margin_size + 5, margin_size + 5), comic_text, (0, 0, 255), font=font)
-        return np.array(img)
+        return img
 
     def quantization_image(self, image, num_clusters=10):
         image = np.array(image)
@@ -155,4 +160,4 @@ class ComicBookEffect(object):
 
 if __name__ == "__main__":
     effect = ComicBookEffect()
-    effect.process("examples/img.jpg", "examples/comic_effect_film-grain2.jpg")
+    effect.process("../examples/img.jpg", "../examples/comic_effect_film-grain2.jpg")

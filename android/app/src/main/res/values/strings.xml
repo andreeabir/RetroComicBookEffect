@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">RetroComicBookEffect</string>
+    <string name="server_url">"http://192.168.0.183:65432"</string>
+    <string name="step1_txt">"Enhance contrast"</string>
+    <string name="step2_txt">"Applying quantization"</string>
+    <string name="step3_txt">"Applying grain"</string>
+    <string name="step4_txt">"Halftone Effect"</string>
+    <string name="normal">""</string>
+</resources>
