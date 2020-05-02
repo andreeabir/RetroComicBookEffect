@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/RetroComicBookEffect.iml" filepath="$PROJECT_DIR$/.idea/RetroComicBookEffect.iml" />
+      <module fileurl="file://$PROJECT_DIR$/RetroComicBookEffect.iml" filepath="$PROJECT_DIR$/RetroComicBookEffect.iml" group="RetroComicBookEffect" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="RetroComicBookEffect/app" />
+      <module fileurl="file://$PROJECT_DIR$/openCVLibrary343/openCVLibrary343.iml" filepath="$PROJECT_DIR$/openCVLibrary343/openCVLibrary343.iml" group="RetroComicBookEffect/openCVLibrary343" />
     </modules>
   </component>
 </project>

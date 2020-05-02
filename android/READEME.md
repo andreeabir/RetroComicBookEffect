@@ -1,1 +1,0 @@
-Here will be the Android client implementation.
